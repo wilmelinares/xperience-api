@@ -26,6 +26,7 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health_check))
         .merge(routes::auth_routes())
+        .merge(routes::position_routes()) // ← agrega esta línea
         .layer(Extension(pool))
         .layer(CorsLayer::permissive());
 
