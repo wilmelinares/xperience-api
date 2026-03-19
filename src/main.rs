@@ -1,3 +1,4 @@
+use axum::extract::DefaultBodyLimit;
 use axum::{Extension, Json, Router, routing::get};
 use dotenvy::dotenv;
 use serde_json::json;
@@ -30,6 +31,7 @@ async fn main() {
         .merge(routes::position_routes())
         .merge(routes::application_routes())
         .merge(routes::upload_routes())
+        .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
         .layer(Extension(pool))
         .layer(CorsLayer::permissive());
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
