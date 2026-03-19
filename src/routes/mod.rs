@@ -23,3 +23,19 @@ pub fn position_routes() -> Router {
                 .delete(handlers::positions::delete_position),
         )
 }
+
+pub fn application_routes() -> Router {
+    Router::new()
+        .route(
+            "/applications",
+            post(handlers::applications::apply).get(handlers::applications::list_applications),
+        )
+        .route(
+            "/applications/:id",
+            patch(handlers::applications::update_status),
+        )
+}
+
+pub fn upload_routes() -> Router {
+    Router::new().route("/upload", post(handlers::upload::upload_cv_handler))
+}

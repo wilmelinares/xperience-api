@@ -8,7 +8,6 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 // GET /positions — public, no token required
-// Returns only open positions ordered by newest first
 pub async fn list_positions(
     Extension(pool): Extension<PgPool>,
 ) -> Result<Json<Vec<Position>>, AppError> {
@@ -22,7 +21,6 @@ pub async fn list_positions(
 }
 
 // GET /positions/:id — public
-// Path(id) extracts :id from the URL and converts it to Uuid automatically
 pub async fn get_position(
     Path(id): Path<Uuid>,
     Extension(pool): Extension<PgPool>,
@@ -37,7 +35,6 @@ pub async fn get_position(
 }
 
 // POST /positions — recruiters only
-// AuthUser validates the JWT automatically before this handler runs
 pub async fn create_position(
     AuthUser(claims): AuthUser,
     Extension(pool): Extension<PgPool>,
@@ -52,8 +49,6 @@ pub async fn create_position(
     let recruiter_id = Uuid::parse_str(&claims.sub)
         .map_err(|_| AppError::InternalError("Invalid user ID".to_string()))?;
 
-    // RETURNING * sends back the full inserted row
-    // This avoids doing a separate SELECT after the INSERT
     let position = sqlx::query_as::<_, Position>(
         "INSERT INTO positions
             (recruiter_id, title, description, location,
@@ -76,7 +71,6 @@ pub async fn create_position(
 }
 
 // PATCH /positions/:id — only the recruiter who owns the position
-// COALESCE keeps the current value if the new value is NULL
 pub async fn update_position(
     AuthUser(claims): AuthUser,
     Path(id): Path<Uuid>,
@@ -90,8 +84,6 @@ pub async fn update_position(
     let recruiter_id = Uuid::parse_str(&claims.sub)
         .map_err(|_| AppError::InternalError("Invalid user ID".to_string()))?;
 
-    // We check recruiter_id in the WHERE clause so a recruiter
-    // cannot edit another recruiter's position
     let position = sqlx::query_as::<_, Position>(
         "UPDATE positions SET
             title         = COALESCE($1, title),
@@ -135,8 +127,6 @@ pub async fn delete_position(
         .execute(&pool)
         .await?;
 
-    // rows_affected() returns how many rows were deleted
-    // If 0, the position either doesn't exist or belongs to another recruiter
     if result.rows_affected() == 0 {
         return Err(AppError::NotFound(
             "Position not found or you don't own it".to_string(),

@@ -5,6 +5,9 @@ use crate::{
 };
 use axum::{Extension, Json};
 use sqlx::PgPool;
+
+
+
 pub async fn register(
     Extension(pool): Extension<PgPool>,
     Json(body): Json<RegisterRequest>,
@@ -13,7 +16,6 @@ pub async fn register(
         .bind(&body.email)
         .fetch_one(&pool)
         .await?;
-
     if exists > 0 {
         return Err(AppError::Conflict("Email already registered".to_string()));
     }
@@ -39,22 +41,28 @@ pub async fn register(
     Ok(Json(AuthResponse { token, user }))
 }
 
+// POST /auth/login
 pub async fn login(
     Extension(pool): Extension<PgPool>,
     Json(body): Json<LoginRequest>,
 ) -> Result<Json<AuthResponse>, AppError> {
-    let row = sqlx::query!(
-        r#"SELECT id, email, full_name,
-           role as "role: UserRole",
-           password_hash
-           FROM users WHERE email = $1"#,
-        &body.email
+    // We return the same error whether the email doesn't exist
+    // or the password is wrong — this prevents user enumeration attacks
+    // (attackers should not know which emails are registered)
+    let row = sqlx::query_as::<_, (uuid::Uuid, String, String, UserRole, String)>(
+        "SELECT id, email, full_name, role, password_hash
+         FROM users WHERE email = $1",
     )
+    .bind(&body.email)
     .fetch_optional(&pool)
     .await?
     .ok_or_else(|| AppError::Unauthorized("Invalid credentials".to_string()))?;
 
-    let valid = bcrypt::verify(&body.password, &row.password_hash)
+    // row is now a tuple — we access each field by position
+    let (id, email, full_name, role, password_hash) = row;
+
+    // Verify the password against the stored hash
+    let valid = bcrypt::verify(&body.password, &password_hash)
         .map_err(|e| AppError::InternalError(e.to_string()))?;
 
     if !valid {
@@ -62,10 +70,10 @@ pub async fn login(
     }
 
     let user = User {
-        id: row.id,
-        email: row.email,
-        full_name: row.full_name,
-        role: row.role,
+        id,
+        email,
+        full_name,
+        role,
     };
 
     let token = create_token(user.id, &user.email, &user.role)?;

@@ -1,2 +1,37 @@
-/target
- .env
+# 🔨 Build output (VERY important)
+target/
+
+# 📦 Lock file (depends on project type)
+Cargo.lock
+
+# 🧠 OS-generated files
+.DS_Store
+Thumbs.db
+
+# 🧪 Testing / coverage
+*.profraw
+*.profdata
+*.gcda
+*.gcno
+
+# 📝 Logs
+*.log
+
+# ⚙️ Environment files
+.env
+
+# 🧰 Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 🧩 Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 📁 Temp folders
+tmp/
+temp/

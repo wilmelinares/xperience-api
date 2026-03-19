@@ -9,6 +9,7 @@ mod handlers;
 mod middleware;
 mod models;
 mod routes;
+mod services;
 
 #[tokio::main]
 async fn main() {
@@ -26,10 +27,11 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health_check))
         .merge(routes::auth_routes())
-        .merge(routes::position_routes()) // ← agrega esta línea
+        .merge(routes::position_routes())
+        .merge(routes::application_routes())
+        .merge(routes::upload_routes())
         .layer(Extension(pool))
         .layer(CorsLayer::permissive());
-
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
 
     tracing::info!("Server running at http://localhost:8080");

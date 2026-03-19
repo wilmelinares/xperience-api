@@ -101,3 +101,30 @@ pub struct UpdatePositionRequest {
     pub has_salary: Option<bool>,
     pub salary_amount: Option<Decimal>,
 }
+
+// ── APPLICATION ──────────────────────────────────────────────────────
+
+// Represents an application row from the database
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct Application {
+    pub id: Uuid,
+    pub student_id: Uuid,
+    pub position_id: Uuid,
+    pub cv_url: String,
+    pub cover_letter: Option<String>,
+    pub status: ApplicationStatus,
+}
+
+// Incoming data when a student applies to a position
+#[derive(Debug, Deserialize)]
+pub struct ApplyRequest {
+    pub position_id: Uuid,
+    pub cv_url: String,
+    pub cover_letter: Option<String>,
+}
+
+// Incoming data when a recruiter updates an application status
+#[derive(Debug, Deserialize)]
+pub struct UpdateApplicationStatusRequest {
+    pub status: ApplicationStatus,
+}

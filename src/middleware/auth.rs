@@ -56,16 +56,23 @@ where
             .and_then(|v| v.to_str().ok())
             .ok_or_else(|| AppError::Unauthorized("Missing Authorization header".to_string()))?;
 
-        let token = auth_header.strip_prefix("Bearer ").ok_or_else(|| {
-            AppError::Unauthorized("Invalid format. Use: Bearer <token>".to_string())
-        })?;
+        let token = auth_header
+            .strip_prefix("Bearer ")
+            .map(|t| t.trim())
+            .ok_or_else(|| {
+                AppError::Unauthorized("Invalid format. Use: Bearer <token>".to_string())
+            })?;
 
         let token_data = decode::<Claims>(
             token,
             &DecodingKey::from_secret(secret.as_bytes()),
             &Validation::new(Algorithm::HS256),
         )
-        .map_err(|_| AppError::Unauthorized("Invalid or expired token".to_string()))?;
+        .map_err(|e| {
+            // Log internally for debugging but never expose details to the client
+            tracing::warn!("Token validation failed: {:?}", e);
+            AppError::Unauthorized("Invalid or expired token".to_string())
+        })?;
 
         Ok(AuthUser(token_data.claims))
     }

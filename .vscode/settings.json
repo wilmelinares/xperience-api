@@ -1,8 +1,0 @@
-{
-    "[rust]": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "rust-lang.rust-analyzer",
-    },
-    "editor.fontSize": 20,
-    "terminal.integrated.fontSize":20
-}
