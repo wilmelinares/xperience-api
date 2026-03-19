@@ -4,7 +4,7 @@ use crate::{
     models::{Application, ApplyRequest, UpdateApplicationStatusRequest, UserRole},
 };
 use axum::{Extension, Json, extract::Path};
-use sqlx::{PgPool, postgres::PgRow};
+use sqlx::PgPool;
 use uuid::Uuid;
 
 // POST /applications — students only

@@ -1,5 +1,7 @@
 use crate::{errors::AppError, middleware::auth::AuthUser, services::storage::upload_cv};
-use axum::{Extension, Json, extract::Multipart};
+
+use axum::{Json, extract::Multipart};
+
 use uuid::Uuid;
 
 // Response returned after a successful upload

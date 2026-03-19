@@ -1,7 +1,7 @@
 use crate::handlers;
 use axum::{
     Router,
-    routing::{delete, get, patch, post},
+    routing::{get, patch, post},
 };
 
 pub fn auth_routes() -> Router {
