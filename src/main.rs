@@ -23,7 +23,21 @@ async fn main() {
         .await
         .expect("Failed to connect to PostgreSQL");
 
+    // Run migrations automatically on startup
+    // In production we don't have terminal access, so this ensures
+    // the database schema is always up to date when the server starts
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run database migrations");
+
+    tracing::info!("Database migrations applied successfully");
     tracing::info!("Connected to PostgreSQL");
+
+    // Read PORT from environment — Railway injects this dynamically
+    // Falls back to 8080 for local development
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let addr = format!("0.0.0.0:{}", port);
 
     let app = Router::new()
         .route("/health", get(health_check))
@@ -34,9 +48,10 @@ async fn main() {
         .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
         .layer(Extension(pool))
         .layer(CorsLayer::permissive());
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
 
-    tracing::info!("Server running at http://localhost:8080");
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+
+    tracing::info!("Server running at http://{}", addr);
     axum::serve(listener, app).await.unwrap();
 }
 
