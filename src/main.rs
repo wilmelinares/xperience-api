@@ -19,9 +19,13 @@ async fn main() {
 
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env");
 
-    let pool = PgPool::connect(&database_url)
-        .await
-        .expect("Failed to connect to PostgreSQL");
+  // Add SSL options for Railway's PostgreSQL
+// Railway requires SSL connections in production
+let pool = sqlx::postgres::PgPoolOptions::new()
+    .max_connections(5)
+    .connect(&database_url)
+    .await
+    .expect("Failed to connect to PostgreSQL");
 
     // Run migrations automatically on startup
     // In production we don't have terminal access, so this ensures
